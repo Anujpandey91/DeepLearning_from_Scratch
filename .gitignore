@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# IDEs / editors
+.vscode/
+.idea/
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# OS / temporary files
+*.swp
+*.swo
+*~
+
+# Machine learning / datasets
+data/
+datasets/
+*.h5
+*.hdf5
+*.ckpt
+*.pth
+*.pt
+*.onnx
+
+# Logs
+*.log

@@ -214,3 +214,91 @@ def max_pool_multichannel_backward(dA, input, pool_size=2, stride=1, padding=0):
     dX = np.stack(gradients, axis=-1)
 
     return dX
+
+
+def average_pool_backward(dA, input, pool_size=2, stride=1, padding=0):
+    """Backpropagation for 2D average pooling."""
+
+    if dA.ndim != 2:
+        raise ValueError("dA must be a 2D array")
+
+    if input.ndim != 2:
+        raise ValueError("input must be a 2D array")
+
+    if pool_size <= 0:
+        raise ValueError("pool_size must be greater than zero")
+
+    if stride <= 0:
+        raise ValueError("stride must be greater than zero")
+
+    if padding < 0:
+        raise ValueError("padding cannot be negative")
+
+    padded_input = np.pad(
+        input, ((padding, padding), (padding, padding)), mode="constant"
+    )
+
+    padded_height, padded_width = padded_input.shape
+
+    if pool_size > padded_height or pool_size > padded_width:
+        raise ValueError("pooling window cannot be larger than the padded input")
+
+    output_height = (padded_height - pool_size) // stride + 1
+    output_width = (padded_width - pool_size) // stride + 1
+
+    if dA.shape != (output_height, output_width):
+        raise ValueError("dA shape does not match the pooling output shape")
+
+    d_padded = np.zeros_like(padded_input, dtype=float)
+
+    gradient_share = 1 / (pool_size * pool_size)
+
+    for i in range(output_height):
+        for j in range(output_width):
+
+            gradient = dA[i, j] * gradient_share
+
+            d_padded[
+                i * stride : i * stride + pool_size, j * stride : j * stride + pool_size
+            ] += gradient
+
+    if padding > 0:
+        dX = d_padded[padding:-padding, padding:-padding]
+    else:
+        dX = d_padded
+
+    return dX
+
+
+def average_pool_multichannel_backward(dA, input, pool_size=2, stride=1, padding=0):
+    """Apply average-pooling backpropagation independently across channels."""
+
+    if dA.ndim != 3:
+        raise ValueError("dA must be a 3D array")
+
+    if input.ndim != 3:
+        raise ValueError("input must be a 3D array")
+
+    if dA.shape[2] != input.shape[2]:
+        raise ValueError("dA and input must have the same number of channels")
+
+    gradients = []
+
+    for i in range(input.shape[2]):
+
+        channel_input = input[:, :, i]
+        channel_dA = dA[:, :, i]
+
+        channel_dX = average_pool_backward(
+            channel_dA,
+            channel_input,
+            pool_size=pool_size,
+            stride=stride,
+            padding=padding,
+        )
+
+        gradients.append(channel_dX)
+
+    dX = np.stack(gradients, axis=-1)
+
+    return dX
